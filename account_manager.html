@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -578,8 +579,16 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label" id="lbl-number">계좌번호</label>
+      <label class="form-label" id="lbl-number">계좌번호 1</label>
       <input class="form-control mono" id="f-number" type="text" placeholder="숫자와 - 만 입력" oninput="formatNumber(this)" maxlength="25">
+    </div>
+
+    <!-- 계좌번호 2 (은행/증권 전용) -->
+    <div id="number2-wrap" style="display:none">
+      <div class="form-group">
+        <label class="form-label">계좌번호 2 <span style="color:var(--text-3)">(선택)</span></label>
+        <input class="form-control mono" id="f-number2" type="text" placeholder="추가 계좌번호 (선택)" oninput="formatNumber(this)" maxlength="25">
+      </div>
     </div>
 
     <!-- 은행 전용 -->
@@ -636,6 +645,15 @@
       <input class="form-control" id="f-memo" type="text" placeholder="추가 메모 (선택)">
     </div>
 
+    <div class="form-group">
+      <label class="form-label">홈페이지 주소 <span style="color:var(--text-3)">(선택 — 바로 연결)</span></label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="form-control mono" id="f-url" type="url" placeholder="https://www.example.com" style="flex:1;">
+        <button type="button" class="btn btn-sm" id="url-preview-btn" onclick="previewUrl()" title="미리보기" style="flex-shrink:0;padding:9px 10px;">🔗</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:5px;">입력 후 🔗 버튼으로 접속 확인 가능</div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">취소</button>
       <button class="btn btn-primary" onclick="saveEntry()">저장</button>
@@ -686,7 +704,7 @@
 <!-- Password Verify Modal (삭제 시) -->
 <div class="overlay" id="pw-verify-overlay">
   <div class="modal" style="max-width:360px">
-    <div class="pw-icon">🔐</div>
+    <div class="pw-icon" id="pw-verify-icon">🔐</div>
     <div class="modal-title" id="pw-verify-title" style="text-align:center">삭제 확인</div>
     <div class="pw-desc" id="pw-verify-desc">삭제하려면 비밀번호를 입력하세요.</div>
     <div class="form-group">
@@ -699,7 +717,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closePwVerify()">취소</button>
-      <button class="btn btn-danger" onclick="confirmPwVerify()">확인</button>
+      <button class="btn btn-danger" id="pw-verify-confirm-btn" onclick="confirmPwVerify()">확인</button>
     </div>
   </div>
 </div>
@@ -1056,6 +1074,7 @@
 
     return `<div class="account-card type-${e.type}">
       <div class="card-actions">
+        ${e.url ? `<button class="icon-btn" title="홈페이지 열기" onclick="openUrl('${e.id}')">🌐</button>` : ''}
         <button class="icon-btn" title="복사" onclick="copyNumber('${e.id}')">📋</button>
         <button class="icon-btn" title="수정" onclick="openEditModal('${e.id}')">✏️</button>
         <button class="icon-btn del" title="삭제" onclick="deleteEntry('${e.id}')">🗑</button>
@@ -1063,12 +1082,19 @@
       <div class="card-type-badge">${label}</div>
       <div class="card-label">별칭</div>
       <div class="card-name">${e.name}</div>
-      <div class="card-label">${e.issuer}</div>
+      <div class="card-label" style="font-size:16.5px;color:var(--text-1);font-weight:500;">${e.issuer}</div>
       <div class="card-number-row">
         <div class="masked-number" id="num-${e.id}">${maskNumber(e.number, e.type)}</div>
         <button class="toggle-vis" title="번호 표시/숨기기" onclick="toggleVis('${e.id}')">👁</button>
       </div>
+      ${(e.type === 'bank' || e.type === 'stock') && e.number2 ? `
+      <div style="font-size:10px;color:var(--text-3);margin-bottom:3px;">계좌번호 2</div>
+      <div class="card-number-row" style="margin-bottom:4px;">
+        <div class="masked-number" id="num2-${e.id}">${maskNumber(e.number2, e.type)}</div>
+        <button class="toggle-vis" title="번호2 표시/숨기기" onclick="toggleVis2('${e.id}')">👁</button>
+      </div>` : ''}
       ${e.memo ? `<div style="font-size:11px;color:var(--text-2);margin-bottom:8px;">💬 ${e.memo}</div>` : ''}
+      ${e.url  ? `<div style="font-size:11px;color:var(--accent);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${e.url.startsWith('http')?e.url:'https://'+e.url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;" title="${e.url}">🌐 ${e.url}</a></div>` : ''}
       <div class="card-meta">${meta}</div>
     </div>`;
   }
@@ -1083,10 +1109,32 @@
     el.textContent = visState[id] ? e.number : maskNumber(e.number, e.type);
   }
 
+  function toggleVis2(id) {
+    const el = document.getElementById('num2-' + id);
+    const e = entries.find(x => x.id === id);
+    if (!e || !el) return;
+    visState['2_'+id] = !visState['2_'+id];
+    el.textContent = visState['2_'+id] ? e.number2 : maskNumber(e.number2, e.type);
+  }
+
   function copyNumber(id) {
     const e = entries.find(x => x.id === id);
     if (!e) return;
     navigator.clipboard.writeText(e.number).then(() => toast('번호가 클립보드에 복사되었습니다'));
+  }
+
+  function previewUrl() {
+    const url = document.getElementById('f-url').value.trim();
+    if (!url) { toast('홈페이지 주소를 먼저 입력하세요', false); return; }
+    const full = url.startsWith('http') ? url : 'https://' + url;
+    window.open(full, '_blank', 'noopener');
+  }
+
+  function openUrl(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e || !e.url) return;
+    const full = e.url.startsWith('http') ? e.url : 'https://' + e.url;
+    window.open(full, '_blank', 'noopener');
   }
 
   /* ── Modal ── */
@@ -1101,16 +1149,28 @@
   function openEditModal(id) {
     const e = entries.find(x => x.id === id);
     if (!e) return;
+    if (!deletePassword) {
+      _doOpenEditModal(id);
+      return;
+    }
+    requirePw('"' + e.name + '" 항목을 수정하려면 비밀번호를 입력하세요.', function() { _doOpenEditModal(id); }, '수정 확인', '✏️', true);
+  }
+
+  function _doOpenEditModal(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
     editId = id;
     document.getElementById('modal-title').textContent = '항목 수정';
     selectType(e.type);
     document.getElementById('f-name').value = e.name || '';
     document.getElementById('f-number').value = e.number || '';
     document.getElementById('f-memo').value = e.memo || '';
+    document.getElementById('f-url').value = e.url || '';
 
     if (e.type === 'bank') {
       document.getElementById('f-issuer').value = e.issuer || '';
       document.getElementById('f-holder').value = e.holder || '';
+      document.getElementById('f-number2').value = e.number2 || '';
     } else if (e.type === 'card') {
       document.getElementById('f-issuer').value = e.issuer || '';
       document.getElementById('f-expiry').value = e.expiry || '';
@@ -1129,6 +1189,7 @@
       }
       document.getElementById('f-acct-type').value = e.acctType || '';
       document.getElementById('f-stock-holder').value = e.stockHolder || '';
+      document.getElementById('f-number2').value = e.number2 || '';
     }
 
     document.getElementById('modal-overlay').classList.add('open');
@@ -1139,8 +1200,8 @@
   }
 
   function clearForm() {
-    ['f-name','f-issuer','f-number','f-holder','f-expiry','f-cvc',
-     'f-cardholder','f-memo','f-stock-custom','f-stock-holder']
+    ['f-name','f-issuer','f-number','f-number2','f-holder','f-expiry','f-cvc',
+     'f-cardholder','f-memo','f-url','f-stock-custom','f-stock-holder']
       .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     const firmSel = document.getElementById('f-stock-firm');
     if (firmSel) firmSel.value = '';
@@ -1162,8 +1223,9 @@
 
     document.getElementById('lbl-issuer').textContent = isBank ? '은행명' : isCard ? '카드사' : '증권사';
     document.getElementById('f-issuer').placeholder = isBank ? '예: 국민은행, 신한은행' : isCard ? '예: 삼성카드, 현대카드' : '';
-    document.getElementById('lbl-number').textContent = isBank ? '계좌번호' : isCard ? '카드번호' : '계좌번호';
+    document.getElementById('lbl-number').textContent = isBank ? '계좌번호 1' : isCard ? '카드번호' : '계좌번호 1';
     document.getElementById('f-number').placeholder = isBank ? '계좌번호 입력' : isCard ? '카드번호 입력' : '증권 계좌번호 입력';
+    document.getElementById('number2-wrap').style.display = (isBank || isStock) ? '' : 'none';
 
     // 은행명 입력 필드: 증권이면 숨기고 드롭다운 사용
     document.getElementById('f-issuer').parentElement.style.display = isStock ? 'none' : '';
@@ -1195,10 +1257,14 @@
     }
 
     const today = new Date().toLocaleDateString('ko-KR');
+    const number2 = (currentType === 'bank' || currentType === 'stock')
+      ? document.getElementById('f-number2').value.trim()
+      : '';
+
     const entry = {
       id: editId || uid(),
       type: currentType,
-      name, issuer, number,
+      name, issuer, number, number2,
       holder:      document.getElementById('f-holder').value.trim(),
       expiry:      document.getElementById('f-expiry').value.trim(),
       cvc:         document.getElementById('f-cvc').value.trim(),
@@ -1206,6 +1272,7 @@
       acctType:    document.getElementById('f-acct-type').value.trim(),
       stockHolder: document.getElementById('f-stock-holder').value.trim(),
       memo:        document.getElementById('f-memo').value.trim(),
+      url:         document.getElementById('f-url').value.trim(),
       date: today
     };
 
@@ -1227,6 +1294,10 @@
   function deleteEntry(id) {
     const e = entries.find(x => x.id === id);
     if (!e) return;
+    if (!deletePassword) {
+      toast('삭제하려면 먼저 삭제 비밀번호를 설정하세요 🔒', false);
+      return;
+    }
     requirePw(`"${e.name}" 항목을 삭제하시겠습니까?`, () => {
       entries = entries.filter(x => x.id !== id);
       saveToServer(); renderAll();
@@ -1236,23 +1307,35 @@
 
   function clearAllData() {
     if (!entries.length) { toast('저장된 항목이 없습니다', false); return; }
+    if (!deletePassword) {
+      toast('전체 삭제하려면 먼저 삭제 비밀번호를 설정하세요 🔒', false);
+      return;
+    }
     requirePw(`저장된 ${entries.length}개의 항목을 모두 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`, () => {
       entries = []; saveToServer(); renderAll();
       toast('모든 항목이 삭제되었습니다');
-    });
+    }, '전체 삭제 확인', '⚠️');
   }
 
   /* ── 비밀번호 확인 흐름 ── */
-  function requirePw(descText, callback) {
-    if (!deletePassword) {
-      // 비밀번호 미설정 → 기존 confirm 방식
-      showConfirm('삭제 확인', descText, callback);
-      return;
-    }
+  function requirePw(descText, callback, titleText, iconText, isEdit) {
+    titleText = titleText || '삭제 확인';
+    iconText  = iconText  || '🔐';
+    isEdit    = isEdit    || false;
     pwVerifyCallback = callback;
-    document.getElementById('pw-verify-desc').textContent = descText;
+    document.getElementById('pw-verify-title').textContent = titleText;
+    document.getElementById('pw-verify-icon').textContent  = iconText;
+    document.getElementById('pw-verify-desc').textContent  = descText;
     document.getElementById('pw-verify-input').value = '';
     document.getElementById('pw-verify-error').style.display = 'none';
+    const confirmBtn = document.getElementById('pw-verify-confirm-btn');
+    if (isEdit) {
+      confirmBtn.className   = 'btn btn-primary';
+      confirmBtn.textContent = '승인 후 수정';
+    } else {
+      confirmBtn.className   = 'btn btn-danger';
+      confirmBtn.textContent = '확인';
+    }
     document.getElementById('pw-verify-overlay').classList.add('open');
     setTimeout(() => document.getElementById('pw-verify-input').focus(), 100);
   }
@@ -1269,8 +1352,10 @@
       document.getElementById('pw-verify-input').focus();
       return;
     }
-    closePwVerify();
-    if (pwVerifyCallback) { pwVerifyCallback(); pwVerifyCallback = null; }
+    const cb = pwVerifyCallback;
+    pwVerifyCallback = null;
+    document.getElementById('pw-verify-overlay').classList.remove('open');
+    if (cb) cb();
   }
 
   /* ── 비밀번호 설정 모달 ── */
@@ -1291,7 +1376,7 @@
       currentSection.style.display = '';
       removeSection.style.display = '';
     } else {
-      noticeEl.innerHTML = '<div class="pw-not-set-notice">⚠️ 비밀번호가 설정되어 있지 않습니다. 삭제 시 비밀번호 확인이 없습니다.</div>';
+      noticeEl.innerHTML = '<div class="pw-not-set-notice">⚠️ 비밀번호가 설정되어 있지 않습니다. 비밀번호를 설정해야 항목 삭제가 가능합니다.</div>';
       currentSection.style.display = 'none';
       removeSection.style.display = 'none';
     }
@@ -1450,14 +1535,21 @@
   }
 
   /* ── Overlay close ── */
+  /* ── 드래그로 인한 오버레이 오닫힘 방지 ──
+       mousedown 이 모달 내부에서 시작된 경우 overlay click 무시 */
+  let _mousedownOnModal = false;
+  document.addEventListener('mousedown', e => {
+    _mousedownOnModal = !!e.target.closest('.modal');
+  });
+
   document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
+    if (!_mousedownOnModal && e.target === e.currentTarget) closeModal();
   });
   document.getElementById('confirm-overlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeConfirm();
+    if (!_mousedownOnModal && e.target === e.currentTarget) closeConfirm();
   });
   document.getElementById('pw-verify-overlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closePwVerify();
+    if (!_mousedownOnModal && e.target === e.currentTarget) closePwVerify();
   });
   document.getElementById('pw-settings-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closePwSettings();
@@ -1474,4 +1566,3 @@
 </script>
 </body>
 </html>
-
