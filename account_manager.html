@@ -439,13 +439,13 @@
       <span class="nav-icon">🏦</span> 은행 계좌
       <span class="nav-count" id="cnt-bank">0</span>
     </div>
-    <div class="nav-item" onclick="switchView('card',this)">
-      <span class="nav-icon">💳</span> 신용카드
-      <span class="nav-count" id="cnt-card">0</span>
-    </div>
-    <div class="nav-item" onclick="switchView('stock',this)">
+      <span class="nav-item" onclick="switchView('stock',this)">
       <span class="nav-icon">📈</span> 증권 계좌
       <span class="nav-count" id="cnt-stock">0</span>
+   </div> 
+     <div class="nav-item" onclick="switchView('card',this)">
+      <span class="nav-icon">💳</span> 신용카드
+      <span class="nav-count" id="cnt-card">0</span>
     </div>
     <div class="nav-section-label" style="margin-top:12px;">관리</div>
     <div class="nav-item" onclick="openAddModal()">
@@ -491,14 +491,12 @@
           <div class="stat-label">은행 계좌</div>
         </div>
         <div class="stat-chip">
+          <div class="stat-value" id="s-stock">0</div>
+          <div class="stat-label">증권 계좌</div>
+         <div class="stat-chip">
           <div class="stat-value" id="s-card">0</div>
           <div class="stat-label">신용카드</div>
         </div>
-        <div class="stat-chip">
-          <div class="stat-value" id="s-stock">0</div>
-          <div class="stat-label">증권 계좌</div>
-        </div>
-      </div>
       <div class="toolbar">
         <div class="search-wrap">
           <span class="search-icon">🔍</span>
@@ -507,8 +505,8 @@
         <div class="filter-tabs">
           <button class="filter-tab active" onclick="setFilter('all',this)">전체</button>
           <button class="filter-tab" onclick="setFilter('bank',this)">계좌</button>
-          <button class="filter-tab" onclick="setFilter('card',this)">카드</button>
           <button class="filter-tab" onclick="setFilter('stock',this)">증권</button>
+          <button class="filter-tab" onclick="setFilter('card',this)">카드</button>
         </div>
       </div>
       <div class="cards-grid" id="grid-all"></div>
@@ -526,13 +524,13 @@
         <div class="type-option-icon">🏦</div>
         <div class="type-option-label">은행 계좌</div>
       </div>
+        <div class="type-option" id="type-stock" onclick="selectType('stock')">
+        <div class="type-option-icon">📈</div>
+        <div class="type-option-label">증권 계좌</div>
+      </div> 
       <div class="type-option" id="type-card" onclick="selectType('card')">
         <div class="type-option-icon">💳</div>
         <div class="type-option-label">신용카드</div>
-      </div>
-      <div class="type-option" id="type-stock" onclick="selectType('stock')">
-        <div class="type-option-icon">📈</div>
-        <div class="type-option-label">증권 계좌</div>
       </div>
     </div>
 
