@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -550,7 +551,7 @@
       <div class="form-group">
         <label class="form-label">증권사</label>
         <select class="form-control" id="f-stock-firm">
-          <option value="">직접 입력</option>
+          <option value="">-- 선택하세요 --</option>
           <option>삼성증권</option>
           <option>미래에셋증권</option>
           <option>한국투자증권</option>
@@ -569,6 +570,7 @@
           <option>토스증권</option>
           <option>카카오페이증권</option>
           <option>LS증권</option>
+          <option value="__custom__">직접 입력...</option>
         </select>
       </div>
       <div class="form-group" id="stock-custom-wrap" style="display:none">
@@ -1201,12 +1203,12 @@
       document.getElementById('f-cardholder').value = e.cardholder || '';
     } else if (e.type === 'stock') {
       const firmSel = document.getElementById('f-stock-firm');
-      const known = [...firmSel.options].map(o=>o.value).filter(Boolean);
+      const known = [...firmSel.options].map(o=>o.value).filter(v => v && v !== '__custom__');
       if (known.includes(e.issuer)) {
         firmSel.value = e.issuer;
         document.getElementById('stock-custom-wrap').style.display = 'none';
       } else {
-        firmSel.value = '';
+        firmSel.value = '__custom__';
         document.getElementById('stock-custom-wrap').style.display = '';
         document.getElementById('f-stock-custom').value = e.issuer || '';
       }
@@ -1260,7 +1262,8 @@
 
   // 증권사 드롭다운 → 직접입력 토글
   document.getElementById('f-stock-firm').addEventListener('change', function() {
-    document.getElementById('stock-custom-wrap').style.display = this.value === '' ? '' : 'none';
+    document.getElementById('stock-custom-wrap').style.display = this.value === '__custom__' ? '' : 'none';
+    if (this.value !== '__custom__') document.getElementById('f-stock-custom').value = '';
   });
 
   function saveEntry() {
@@ -1270,7 +1273,7 @@
 
     if (currentType === 'stock') {
       const firmVal = document.getElementById('f-stock-firm').value;
-      issuer = firmVal || document.getElementById('f-stock-custom').value.trim();
+      issuer = (firmVal === '__custom__' || firmVal === '') ? document.getElementById('f-stock-custom').value.trim() : firmVal;
     } else {
       issuer = document.getElementById('f-issuer').value.trim();
     }
@@ -1589,3 +1592,5 @@
 </script>
 </body>
 </html>
+
+
