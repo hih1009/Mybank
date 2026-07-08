@@ -5,23 +5,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>금융정보 관리 시스템</title>
+
+<!-- ── PWA 설정 ── -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="description" content="은행/증권/카드 계좌 정보를 관리하는 개인 금융정보 관리 앱">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="금융관리">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg:       #0D1117;
-    --surface:  #161B22;
-    --border:   #21262D;
-    --accent:   #58A6FF;
-    --danger:   #F85149;
-    --success:  #3FB950;
-    --warning:  #D29922;
-    --text-1:   #E6EDF3;
-    --text-2:   #8B949E;
-    --text-3:   #484F58;
+    --bg:       #FFFFFF;
+    --surface:  #F6F8FA;
+    --border:   #D0D7DE;
+    --accent:   #0969DA;
+    --danger:   #CF222E;
+    --success:  #1A7F37;
+    --warning:  #9A6700;
+    --text-1:   #1F2328;
+    --text-2:   #59636E;
+    --text-3:   #8C959F;
     --bank:     #1F6FEB;
     --card:     #8957E5;
-    --stock:    #0EA37F;
+    --stock:    #0E8A6D;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -96,6 +106,13 @@
     flex-direction: column;
     gap: 4px;
   }
+  .nav-explore, .nav-manage {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  #mobile-manage-btn { display: none; }
+  .nav-manage-backdrop { display: none; }
   .nav-section-label {
     font-size: 10px; font-weight: 600;
     letter-spacing: 1px; text-transform: uppercase;
@@ -111,7 +128,7 @@
     transition: all .15s;
     font-size: 13px;
   }
-  .nav-item:hover { background: rgba(255,255,255,.04); color: var(--text-1); }
+  .nav-item:hover { background: rgba(0,0,0,.035); color: var(--text-1); }
   .nav-item.active { background: rgba(88,166,255,.08); color: var(--accent); border-left-color: var(--accent); }
   .nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
   .nav-count {
@@ -153,8 +170,8 @@
     transition: all .15s;
   }
   .btn:hover { background: var(--border); }
-  .btn-primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-  .btn-primary:hover { background: #79b8ff; border-color: #79b8ff; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn-primary:hover { background: #0550AE; border-color: #0550AE; }
   .btn-danger { color: var(--danger); border-color: rgba(248,81,73,.3); }
   .btn-danger:hover { background: rgba(248,81,73,.1); }
   .btn-sm { padding: 5px 10px; font-size: 12px; }
@@ -276,7 +293,7 @@
   .form-control:focus { border-color: var(--accent); }
   .form-control.mono { font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px; }
   select.form-control { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B949E' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
-  select.form-control option { background: #161B22; }
+  select.form-control option { background: var(--surface); }
 
   .type-selector {
     display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
@@ -406,6 +423,173 @@
     border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--warning);
     margin-bottom: 16px;
   }
+
+  /* ══════════════════════════════════════════
+     모바일(휴대폰) 화면 대응
+     ══════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    body { overflow-x: hidden; }
+
+    header {
+      padding: 10px 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .logo { font-size: 13px; }
+    .header-meta { font-size: 11px; gap: 8px; }
+    #pwa-install-btn { padding: 5px 9px; font-size: 11px; }
+
+    .security-bar {
+      padding: 7px 14px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    main {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      min-width: 0;
+    }
+
+    aside {
+      flex-direction: column;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      gap: 0;
+      min-width: 0;
+    }
+    .nav-explore {
+      flex-direction: row;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 6px 8px;
+      gap: 2px;
+      white-space: nowrap;
+      min-width: 0;
+      width: 100%;
+    }
+    .nav-section-label { display: none; }
+    .nav-explore .nav-item {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .nav-explore .nav-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+    .nav-count { margin-left: 6px; }
+
+    /* ── 더보기(관리/설정) 패널: 하단 시트 형태 ── */
+    #mobile-manage-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .nav-manage-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 250;
+    }
+    .nav-manage-backdrop.open { display: block; }
+    .nav-manage {
+      display: none;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding: 10px 8px calc(20px + env(safe-area-inset-bottom, 0px));
+      max-height: 75vh;
+      overflow-y: auto;
+      z-index: 260;
+      gap: 4px;
+    }
+    .nav-manage.open { display: flex; flex-direction: column; }
+    .nav-manage::before {
+      content: '';
+      display: block;
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 2px auto 10px;
+    }
+    .nav-manage .nav-section-label { display: block; }
+    .nav-manage .nav-item {
+      border-left: none;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      white-space: normal;
+    }
+
+    .content {
+      padding: 16px 14px 28px;
+      max-height: none;
+      overflow-y: visible;
+    }
+
+    .page-header { flex-wrap: wrap; gap: 10px; }
+    .page-title { font-size: 16px; }
+
+    .stats-bar {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+    .stat-chip { flex-shrink: 0; padding: 8px 12px; }
+    .stat-chip .stat-value { font-size: 18px; }
+
+    .toolbar { flex-wrap: wrap; }
+    .search-wrap { flex: 1 1 100%; }
+    .filter-tabs {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .cards-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .account-card { padding: 14px; }
+
+    .overlay { padding: 12px; }
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      padding: 20px 18px;
+      max-height: 85vh;
+    }
+
+    .type-selector { gap: 6px; }
+    .type-option { padding: 10px 4px; }
+    .type-option-icon { font-size: 18px; margin-bottom: 3px; }
+    .type-option-label { font-size: 10.5px; }
+
+    .form-row { grid-template-columns: 1fr; gap: 0; }
+
+    #toast {
+      left: 12px; right: 12px; bottom: 16px;
+      width: auto;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .type-option-label { font-size: 9.5px; }
+    .logo { font-size: 12px; }
+    .header-meta span#storage-label { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -421,6 +605,8 @@
       <span id="storage-label">GitHub 연결 중...</span>
     </div>
     <span class="badge" id="storage-badge">GITHUB SYNC</span>
+    <button id="mobile-manage-btn" onclick="openMobileManage()">⋮ 더보기</button>
+    <button id="pwa-install-btn" style="display:none; background:var(--accent); color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer;">📲 앱 설치</button>
   </div>
 </header>
 
@@ -430,6 +616,7 @@
 
 <main>
   <aside>
+    <div class="nav-explore">
     <div class="nav-section-label">탐색</div>
     <div class="nav-item active" onclick="switchView('all',this)">
       <span class="nav-icon">🗂</span> 전체
@@ -439,38 +626,42 @@
       <span class="nav-icon">🏦</span> 은행 계좌
       <span class="nav-count" id="cnt-bank">0</span>
     </div>
-    <div class="nav-item" onclick="switchView('stock',this)">
-      <span class="nav-icon">📈</span> 증권 계좌
-      <span class="nav-count" id="cnt-stock">0</span>
-    </div>
     <div class="nav-item" onclick="switchView('card',this)">
       <span class="nav-icon">💳</span> 신용카드
       <span class="nav-count" id="cnt-card">0</span>
     </div>
+    <div class="nav-item" onclick="switchView('stock',this)">
+      <span class="nav-icon">📈</span> 증권 계좌
+      <span class="nav-count" id="cnt-stock">0</span>
+    </div>
+    </div>
+    <div class="nav-manage" id="nav-manage">
     <div class="nav-section-label" style="margin-top:12px;">관리</div>
-    <div class="nav-item" onclick="openAddModal()">
+    <div class="nav-item" onclick="closeMobileManage(); openAddModal()">
       <span class="nav-icon">➕</span> 새 항목 추가
     </div>
-    <div class="nav-item" onclick="exportData()">
+    <div class="nav-item" onclick="closeMobileManage(); exportData()">
       <span class="nav-icon">📤</span> 내보내기
     </div>
-    <div class="nav-item" onclick="triggerImport()">
+    <div class="nav-item" onclick="closeMobileManage(); triggerImport()">
       <span class="nav-icon">📥</span> 가져오기
     </div>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-    <div class="nav-item btn-danger" onclick="clearAllData()" style="color:var(--danger)">
+    <div class="nav-item btn-danger" onclick="closeMobileManage(); clearAllData()" style="color:var(--danger)">
       <span class="nav-icon">🗑</span> 전체 삭제
     </div>
     <div class="nav-section-label" style="margin-top:12px;">설정</div>
-    <div class="nav-item" onclick="openGithubSettingsModal()">
+    <div class="nav-item" onclick="closeMobileManage(); openGithubSettingsModal()">
       <span class="nav-icon">🐙</span> GitHub 설정
       <span id="gh-status-badge" style="margin-left:auto;font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(248,81,73,.15);color:var(--danger);border:1px solid rgba(248,81,73,.3);">미연결</span>
     </div>
-    <div class="nav-item" onclick="openPwSettingsModal()">
+    <div class="nav-item" onclick="closeMobileManage(); openPwSettingsModal()">
       <span class="nav-icon">🔑</span> 비밀번호 설정
       <span id="pw-status-badge" style="margin-left:auto;font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(248,81,73,.15);color:var(--danger);border:1px solid rgba(248,81,73,.3);">미설정</span>
     </div>
+    </div>
   </aside>
+  <div class="nav-manage-backdrop" id="nav-manage-backdrop" onclick="closeMobileManage()"></div>
 
   <div class="content">
     <div class="view active" id="view-all">
@@ -491,12 +682,12 @@
           <div class="stat-label">은행 계좌</div>
         </div>
         <div class="stat-chip">
-          <div class="stat-value" id="s-stock">0</div>
-          <div class="stat-label">증권 계좌</div>
-        </div>
-        <div class="stat-chip">
           <div class="stat-value" id="s-card">0</div>
           <div class="stat-label">신용카드</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-value" id="s-stock">0</div>
+          <div class="stat-label">증권 계좌</div>
         </div>
       </div>
       <div class="toolbar">
@@ -507,8 +698,8 @@
         <div class="filter-tabs">
           <button class="filter-tab active" onclick="setFilter('all',this)">전체</button>
           <button class="filter-tab" onclick="setFilter('bank',this)">계좌</button>
-          <button class="filter-tab" onclick="setFilter('stock',this)">증권</button>
           <button class="filter-tab" onclick="setFilter('card',this)">카드</button>
+          <button class="filter-tab" onclick="setFilter('stock',this)">증권</button>
         </div>
       </div>
       <div class="cards-grid" id="grid-all"></div>
@@ -526,13 +717,13 @@
         <div class="type-option-icon">🏦</div>
         <div class="type-option-label">은행 계좌</div>
       </div>
-      <div class="type-option" id="type-stock" onclick="selectType('stock')">
-        <div class="type-option-icon">📈</div>
-        <div class="type-option-label">증권 계좌</div>
-      </div>
       <div class="type-option" id="type-card" onclick="selectType('card')">
         <div class="type-option-icon">💳</div>
         <div class="type-option-label">신용카드</div>
+      </div>
+      <div class="type-option" id="type-stock" onclick="selectType('stock')">
+        <div class="type-option-icon">📈</div>
+        <div class="type-option-label">증권 계좌</div>
       </div>
     </div>
 
@@ -1586,11 +1777,52 @@
     if (e.target === e.currentTarget) closeGithubSettings();
   });
 
+  /* ── 모바일: 관리/설정 더보기 패널 ── */
+  function openMobileManage() {
+    document.getElementById('nav-manage').classList.add('open');
+    document.getElementById('nav-manage-backdrop').classList.add('open');
+  }
+  function closeMobileManage() {
+    document.getElementById('nav-manage').classList.remove('open');
+    document.getElementById('nav-manage-backdrop').classList.remove('open');
+  }
+
   /* ── Init ── */
   updateGhStatusBadge(!!ghGistId);
   loadFromServer();
+
+  /* ── PWA: 서비스 워커 등록 + 안드로이드 홈 화면 설치 ── */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('서비스 워커 등록 실패(파일을 file://로 열었다면 정상입니다):', err);
+      });
+    });
+  }
+
+  let deferredInstallPrompt = null;
+  const installBtn = document.getElementById('pwa-install-btn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (installBtn) installBtn.style.display = 'inline-block';
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.style.display = 'none';
+    console.log('앱이 홈 화면에 설치되었습니다.');
+  });
 </script>
 </body>
 </html>
-
-
